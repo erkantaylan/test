@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shelf System</title>
+    <style>
+        .container {
+            padding: 20px;
+        }
+        .shelf {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+        .column {
+            border: 1px solid #ccc;
+            padding: 10px;
+            min-width: 100px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .column.selected {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+        }
+        .item {
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px;
+            text-align: center;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .count-table {
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        .count-table td, .count-table th {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <input type="number" id="rows" placeholder="Number of rows" min="1">
+            <input type="number" id="cols" placeholder="Number of columns" min="1">
+            <input type="number" id="maxItems" placeholder="Items per column" min="1">
+            <button onclick="generateShelf()">Generate Shelf</button>
+            <button onclick="insertItem()">Insert Item to Selected</button>
+            <button onclick="showAllCounts()">Show All Counts</button>
+        </div>
+        
+        <div id="shelfContainer" class="shelf"></div>
+        <div id="countInfo"></div>
+    </div>
+
+    <script>
+        let selectedColumn = null;
+        let shelfData = [];
+
+        function generateShelf() {
+            const rows = parseInt(document.getElementById('rows').value);
+            const cols = parseInt(document.getElementById('cols').value);
+            const maxItems = parseInt(document.getElementById('maxItems').value);
+            
+            const shelfContainer = document.getElementById('shelfContainer');
+            shelfContainer.innerHTML = '';
+            shelfData = [];
+
+            for(let i = 0; i < rows; i++) {
+                const row = document.createElement('div');
+                row.className = 'row';
+                shelfData[i] = [];
+                
+                for(let j = 0; j < cols; j++) {
+                    const column = document.createElement('div');
+                    column.className = 'column';
+                    column.dataset.row = i;
+                    column.dataset.col = j;
+                    column.onclick = () => selectColumn(column);
+                    
+                    shelfData[i][j] = 0;
+                    row.appendChild(column);
+                }
+                shelfContainer.appendChild(row);
+            }
+        }
+
+        function selectColumn(column) {
+            if(selectedColumn) selectedColumn.classList.remove('selected');
+            selectedColumn = column;
+            column.classList.add('selected');
+            updateCountInfo();
+        }
+
+        function insertItem() {
+            if(!selectedColumn) return;
+            
+            const maxItems = parseInt(document.getElementById('maxItems').value);
+            const row = parseInt(selectedColumn.dataset.row);
+            const col = parseInt(selectedColumn.dataset.col);
+            
+            if(shelfData[row][col] < maxItems) {
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.textContent = `Item ${shelfData[row][col] + 1}`;
+                selectedColumn.appendChild(item);
+                shelfData[row][col]++;
+                updateCountInfo();
+            }
+        }
+
+        function updateCountInfo() {
+            if(!selectedColumn) return;
+            const row = parseInt(selectedColumn.dataset.row);
+            const col = parseInt(selectedColumn.dataset.col);
+            document.getElementById('countInfo').innerHTML = `
+                Selected Cell: Row ${row + 1}, Column ${col + 1} - Items: ${shelfData[row][col]}
+            `;
+        }
+
+        function showAllCounts() {
+            let table = `<table class="count-table"><tr><th></th>`;
+            const cols = document.getElementById('cols').value;
+            
+            // Create header
+            for(let j = 0; j < cols; j++) {
+                table += `<th>Column ${j + 1}</th>`;
+            }
+            table += '</tr>';
+            
+            // Create rows
+            for(let i = 0; i < shelfData.length; i++) {
+                table += `<tr><td>Row ${i + 1}</td>`;
+                for(let j = 0; j < shelfData[i].length; j++) {
+                    table += `<td>${shelfData[i][j]}</td>`;
+                }
+                table += '</tr>';
+            }
+            table += '</table>';
+            
+            document.getElementById('countInfo').innerHTML = table;
+        }
+    </script>
+</body>
+</html>
